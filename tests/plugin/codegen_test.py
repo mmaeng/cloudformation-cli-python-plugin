@@ -487,7 +487,7 @@ def test__build_docker_no_euid(plugin):
 
     patch_pip = patch.object(plugin, "_pip_build", autospec=True)
     patch_from_env = patch("rpdk.python.codegen.docker.from_env", autospec=True)
-    patch_os_geteuid = patch("rpdk.python.codegen.os.geteuid", autospec=True)
+    patch_os_geteuid = patch.object(os, "geteuid", autospec=True)
 
     with patch_pip as mock_pip, patch_from_env as mock_from_env, patch_os_geteuid as mock_patch_os_geteuid:  # noqa: B950 pylint: disable=line-too-long
         mock_run = mock_from_env.return_value.containers.run
