@@ -1,9 +1,9 @@
 # pylint: disable=redefined-outer-name,protected-access
-import os
 import pytest
 
 import ast
 import importlib.util
+import os
 from docker.errors import APIError, ContainerError, ImageLoadError
 from pathlib import Path
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -319,7 +319,10 @@ def test_generate_resource_with_type_configuration(tmp_path):
         project.init(type_name, PythonLanguagePlugin.NAME)
 
     copyfile(
-        str(Path.cwd() / f"{os.path.join( 'tests', 'data', 'schema-with-typeconfiguration.json')}"),
+        str(
+            Path.cwd()
+            / f"{os.path.join( 'tests', 'data', 'schema-with-typeconfiguration.json')}"
+        ),
         str(project.root / "schema-with-typeconfiguration.json"),
     )
     project.type_info = ("schema", "with", "typeconfiguration")
@@ -328,7 +331,10 @@ def test_generate_resource_with_type_configuration(tmp_path):
     project.generate()
 
     # assert TypeConfigurationModel is added to generated directory
-    models_path = project.root / f"{os.path.join( 'src', 'schema_with_typeconfiguration', 'models.py')}"
+    models_path = (
+        project.root
+        / f"{os.path.join( 'src', 'schema_with_typeconfiguration', 'models.py')}"
+    )
 
     # this however loads the module
     spec = importlib.util.spec_from_file_location("foo_bar_baz.models", models_path)
@@ -354,7 +360,9 @@ def test_package_resource_pip(resource_project):
     (resource_project.root / "requirements.txt").write_text("")
     (resource_project.root / f"{SUPPORT_LIB_NAME}-2.1.1.tar.gz").touch()
     # want to exclude *.pyc files from zip, but code isn't run, so never get made
-    (resource_project.root / f"{os.path.join( 'src', 'foo_bar_baz', 'coverage.pyc')}").touch()
+    (
+        resource_project.root / f"{os.path.join( 'src', 'foo_bar_baz', 'coverage.pyc')}"
+    ).touch()
 
     zip_path = resource_project.root / "foo-bar-baz.zip"
 
