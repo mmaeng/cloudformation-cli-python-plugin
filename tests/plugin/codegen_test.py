@@ -281,7 +281,7 @@ def test_generate_hook(hook_project):
     files = after.keys() - before.keys() - {"hook-role.yaml"}
     print("Project files: ", get_files_in_project(hook_project))
     assert files == {
-        f"{os.path.join('src', 'foo_bar_baz', 'models.py')}"
+        f"{os.path.join('src', 'foo_bar_baz', 'models.py')}",
         "foo-bar-baz-configuration.json",
     }
 
