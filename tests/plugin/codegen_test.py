@@ -490,7 +490,7 @@ def test__build_docker_no_euid(plugin):
     patch_os = patch("rpdk.python.codegen.os", autospec=True)
     patch_os_name = patch("rpdk.python.codegen.os.name", "posix")
 
-    with patch_pip as mock_pip, patch_from_env as mock_from_env, patch_os as mock_patch_os:
+    with patch_pip as mock_pip, patch_from_env as mock_from_env, patch_os as mock_patch_os:  # noqa: B950 pylint: disable=line-too-long
         mock_run = mock_from_env.return_value.containers.run
         mock_patch_os.geteuid.side_effect = AttributeError()
         with patch_os_name:
