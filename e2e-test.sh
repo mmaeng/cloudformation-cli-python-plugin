@@ -11,7 +11,7 @@ cfn generate -vvv
 DIR=$(mktemp -d)
 cd "$DIR"
 ls -la
-cfn init -t AWS::Foo::Bar::Module -a MODULE $1 --use-docker
+cfn init -t AWS::Foo::Bar::MODULE -a MODULE $1 --use-docker
 ls -la
 cfn validate -vvv
 cfn generate -vvv
