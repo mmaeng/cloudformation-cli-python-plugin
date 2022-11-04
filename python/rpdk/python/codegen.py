@@ -325,7 +325,7 @@ class Python36LanguagePlugin(LanguagePlugin):
 
         docker_client = docker.from_env()
         try:
-            logs= []
+            logs = []
             logs = docker_client.containers.run(
                 image=image,
                 command=command,
