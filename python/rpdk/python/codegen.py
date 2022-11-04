@@ -281,12 +281,17 @@ class Python36LanguagePlugin(LanguagePlugin):
     @classmethod
     def _docker_build(cls, external_path):
         internal_path = PurePosixPath("/project")
+        # There is a logging bug in docker-py that requires a delay to get logs
+        # in case there is an abnormal exit
+        # https://github.com/docker/docker-py/issues/2427
+        # https://github.com/docker/docker-py/issues/2655
+        # https://github.com/docker/docker-py/pull/2282
         command = (
             '/bin/bash -c "'
             + " ".join(cls._update_pip_command())
             + " && "
             + " ".join(cls._make_pip_command(internal_path))
-            + '"'
+            + '; sleep 2"'
         )
         LOG.debug("command is '%s'", command)
 
@@ -323,9 +328,11 @@ class Python36LanguagePlugin(LanguagePlugin):
             logs = docker_client.containers.run(
                 image=image,
                 command=command,
-                remove=True,
+                auto_remove=True,
                 volumes=volumes,
                 stream=True,
+                stdout=True,
+                stderr=True,
                 entrypoint="",
                 user=localuser,
             )
@@ -339,6 +346,8 @@ class Python36LanguagePlugin(LanguagePlugin):
             cause.__cause__ = e
             raise DownstreamError("Error running docker build") from cause
         except (ContainerError, ImageLoadError, APIError) as e:
+            for line in logs:
+                LOG.error(line.rstrip(b"\n").decode("utf-8"))
             raise DownstreamError("Error running docker build") from e
         LOG.debug("Build running. Output:")
         for line in logs:
