@@ -325,6 +325,7 @@ class Python36LanguagePlugin(LanguagePlugin):
 
         docker_client = docker.from_env()
         try:
+            logs= []
             logs = docker_client.containers.run(
                 image=image,
                 command=command,
@@ -346,9 +347,8 @@ class Python36LanguagePlugin(LanguagePlugin):
             cause.__cause__ = e
             raise DownstreamError("Error running docker build") from cause
         except (ContainerError, ImageLoadError, APIError) as e:
-            if logs:
-                for line in logs:
-                    LOG.error(line.rstrip(b"\n").decode("utf-8"))
+            for line in logs:
+                LOG.error(line.rstrip(b"\n").decode("utf-8"))
             raise DownstreamError("Error running docker build") from e
         LOG.debug("Build running. Output:")
         for line in logs:
