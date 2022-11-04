@@ -347,7 +347,7 @@ class Python36LanguagePlugin(LanguagePlugin):
             cause.__cause__ = e
             raise DownstreamError("Error running docker build") from cause
         except (ContainerError, ImageLoadError, APIError) as e:
-            for line in logs:
+            for line in logs:  # pragma: no cover
                 LOG.error(line.rstrip(b"\n").decode("utf-8"))
             raise DownstreamError("Error running docker build") from e
         LOG.debug("Build running. Output:")
