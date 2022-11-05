@@ -329,6 +329,7 @@ class Python36LanguagePlugin(LanguagePlugin):
                 image=image,
                 command=command,
                 volumes=volumes,
+                detach=True,
                 stdout=True,
                 stderr=True,
                 entrypoint="",
@@ -344,16 +345,18 @@ class Python36LanguagePlugin(LanguagePlugin):
             )
             cause.__cause__ = e
             raise DownstreamError("Error running docker build") from cause
-        except (ContainerError) as e:
-            LOG.error(container.logs().rstrip(b"\n").decode("utf-8"))
-            raise DownstreamError("Container Error during docker build") from e
-        except (ImageLoadError, APIError) as e:
+        except (ContainerError, ImageLoadError, APIError) as e:
             raise DownstreamError("Error running docker build") from e
         finally:
             try:
+                LOG.debug(
+                    container.logs().rstrip(b"\n").decode("utf-8")
+                )  # pragma: no cover
+                # Remove container
                 container.remove()
             except NameError:
-                raise DownstreamError("Docker Container not created")
+                # No container to remove, there was APIError or ImageLoadError
+                pass
 
     @classmethod
     def _pip_build(cls, base_path):
@@ -363,7 +366,12 @@ class Python36LanguagePlugin(LanguagePlugin):
         LOG.warning("Starting pip build.")
         try:
             completed_proc = subprocess_run(  # nosec
-                command, stdout=PIPE, stderr=PIPE, cwd=base_path, check=True
+                command,
+                stdout=PIPE,
+                stderr=PIPE,
+                cwd=base_path,
+                check=True,
+                shell=True,
             )
         except (FileNotFoundError, CalledProcessError) as e:
             raise DownstreamError("pip build failed") from e
