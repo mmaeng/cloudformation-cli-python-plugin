@@ -281,17 +281,12 @@ class Python36LanguagePlugin(LanguagePlugin):
     @classmethod
     def _docker_build(cls, external_path):
         internal_path = PurePosixPath("/project")
-        # There is a logging bug in docker-py that requires a delay to get logs
-        # in case there is an abnormal exit
-        # https://github.com/docker/docker-py/issues/2427
-        # https://github.com/docker/docker-py/issues/2655
-        # https://github.com/docker/docker-py/pull/2282
         command = (
             '/bin/bash -c "'
             + " ".join(cls._update_pip_command())
             + " && "
             + " ".join(cls._make_pip_command(internal_path))
-            + '; sleep 2"'
+            + '"'
         )
         LOG.debug("command is '%s'", command)
 
@@ -325,18 +320,21 @@ class Python36LanguagePlugin(LanguagePlugin):
 
         docker_client = docker.from_env()
         try:
-            logs = []
-            logs = docker_client.containers.run(
+            # There is a logging bug in docker-py that requires a delay to get logs
+            # in case there is an abnormal exit and container is removed
+            # https://github.com/docker/docker-py/issues/2427
+            # https://github.com/docker/docker-py/issues/2655
+            # https://github.com/docker/docker-py/pull/2282
+            container = docker_client.containers.run(
                 image=image,
                 command=command,
-                auto_remove=True,
                 volumes=volumes,
-                stream=True,
                 stdout=True,
                 stderr=True,
                 entrypoint="",
                 user=localuser,
             )
+            container.wait()
         except RequestsConnectionError as e:
             # it seems quite hard to reliably extract the cause from
             # ConnectionError. we replace it with a friendlier error message
@@ -346,13 +344,16 @@ class Python36LanguagePlugin(LanguagePlugin):
             )
             cause.__cause__ = e
             raise DownstreamError("Error running docker build") from cause
-        except (ContainerError, ImageLoadError, APIError) as e:
-            for line in logs:  # pragma: no cover
-                LOG.error(line.rstrip(b"\n").decode("utf-8"))
+        except (ContainerError) as e:
+            LOG.error(container.logs().rstrip(b"\n").decode("utf-8"))
+            raise DownstreamError("Container Error during docker build") from e
+        except (ImageLoadError, APIError) as e:
             raise DownstreamError("Error running docker build") from e
-        LOG.debug("Build running. Output:")
-        for line in logs:
-            LOG.debug(line.rstrip(b"\n").decode("utf-8"))
+        finally:
+            try:
+                container.remove()
+            except NameError:
+                raise DownstreamError("Docker Container not created")
 
     @classmethod
     def _pip_build(cls, base_path):
