@@ -371,7 +371,6 @@ class Python36LanguagePlugin(LanguagePlugin):
                 stderr=PIPE,
                 cwd=base_path,
                 check=True,
-                shell=True,
             )
         except (FileNotFoundError, CalledProcessError) as e:
             raise DownstreamError("pip build failed") from e

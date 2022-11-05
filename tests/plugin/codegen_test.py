@@ -565,4 +565,3 @@ def test__docker_build_bad_path(plugin, tmp_path, exception):
         entrypoint="",
         user=ANY,
     )
-    mock_run.remove.assert_called_once()
