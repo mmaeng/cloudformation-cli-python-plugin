@@ -351,7 +351,7 @@ class Python36LanguagePlugin(LanguagePlugin):
             try:
                 LOG.debug(
                     container.logs().rstrip(b"\n").decode("utf-8")
-                )  # pragma: no cover
+                )
                 # Remove container
                 container.remove()
             except NameError:

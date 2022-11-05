@@ -505,13 +505,14 @@ def test__build_docker_no_euid(plugin):
 
 def test__docker_build_good_path(plugin, tmp_path):
     patch_from_env = patch("rpdk.python.codegen.docker.from_env", autospec=True)
+    patch_container = patch("docker.models.containers.Container", autospec=True)
 
-    with patch_from_env as mock_from_env:
+    with patch_from_env as mock_from_env, patch_container as mock_container:
         mock_run = mock_from_env.return_value.containers.run
-        mock_run.return_value = [b"output\n\n"]
+        mock_container = mock_run.return_value
         plugin._docker_build(tmp_path)
 
-    mock_from_env.assert_called_once_with()
+    mock_from_env.assert_called_once()
     mock_run.assert_called_once_with(
         image=ANY,
         command=ANY,
@@ -522,6 +523,9 @@ def test__docker_build_good_path(plugin, tmp_path):
         entrypoint="",
         user=ANY,
     )
+    mock_container.wait.assert_called_once()
+    mock_container.logs.assert_called_once()
+    mock_container.remove.assert_called_once()
 
 
 def test_get_plugin_information(resource_project):
@@ -546,11 +550,12 @@ def test_get_plugin_information(resource_project):
 )
 def test__docker_build_bad_path(plugin, tmp_path, exception):
     patch_from_env = patch("rpdk.python.codegen.docker.from_env", autospec=True)
+    patch_container = patch("docker.models.containers.Container", autospec=True)
 
-    with patch_from_env as mock_from_env:
+    with patch_from_env as mock_from_env, patch_container as mock_container:
         mock_run = mock_from_env.return_value.containers.run
+        mock_container = mock_run.return_value
         mock_run.side_effect = exception()
-
         with pytest.raises(DownstreamError):
             plugin._docker_build(tmp_path)
 
@@ -565,3 +570,4 @@ def test__docker_build_bad_path(plugin, tmp_path, exception):
         entrypoint="",
         user=ANY,
     )
+    mock_container.remove.assert_called_once()
