@@ -16,6 +16,7 @@ def setup_subparser(subparsers, parents, python_version):
         help="""Use docker for python platform-independent packaging.
             This is highly recommended unless you are experienced
             with cross-platform Python packaging.""",
+        default=False,
     )
 
     return parser
