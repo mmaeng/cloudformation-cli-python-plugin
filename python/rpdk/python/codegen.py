@@ -247,6 +247,20 @@ class Python36LanguagePlugin(LanguagePlugin):
         LOG.debug("Dependencies build finished")
 
     @staticmethod
+    def _install_pip_requirements():
+        return [
+            "yum",
+            "install",
+            "-q",
+            "-y",
+            "openssh-clients",
+            "git",
+            "svn",
+            "bzr",
+            "mercurial",
+        ]
+
+    @staticmethod
     def _make_pip_command(base_path):
         return [
             "pip",
@@ -262,24 +276,24 @@ class Python36LanguagePlugin(LanguagePlugin):
         ]
 
     @staticmethod
+    def _chown_build(base_path, euid_gid):
+        # Local user will need permissions to the build files
+        # this is to ensure access to the directory after docker package building
+        return [
+            "chown",
+            "-R",
+            str(euid_gid),
+            str(base_path / "build"),
+        ]
+
+    @staticmethod
     def _get_plugin_information() -> Dict:
         return {"plugin-tool-version": __version__, "plugin-name": "python"}
 
     @classmethod
     def _docker_build(cls, external_path):
         internal_path = PurePosixPath("/project")
-        command = (
-            '/bin/bash -c "' + " ".join(cls._make_pip_command(internal_path)) + '"'
-        )
-        LOG.debug("command is '%s'", command)
-
         volumes = {str(external_path): {"bind": str(internal_path), "mode": "rw"}}
-        image = f"public.ecr.aws/lambda/python:{cls.DOCKER_TAG}"
-        LOG.warning(
-            "Starting Docker build. This may take several minutes if the "
-            "image '%s' needs to be pulled first.",
-            image,
-        )
 
         # Docker will mount the path specified in the volumes variable in the container
         # and pip will place all the dependent packages inside the volumes/build path.
@@ -300,6 +314,24 @@ class Python36LanguagePlugin(LanguagePlugin):
             LOG.warning(
                 "User ID / Group ID not found.  Using root:root for docker build"
             )
+
+        command = (
+            '/bin/bash -c "'
+            + " ".join(cls._install_pip_requirements())
+            + " && "
+            + " ".join(cls._make_pip_command(internal_path))
+            + " && "
+            + " ".join(cls._chown_build(internal_path, localuser))
+            + '"'
+        )
+        LOG.debug("command is '%s'", command)
+
+        image = f"public.ecr.aws/lambda/python:{cls.DOCKER_TAG}"
+        LOG.warning(
+            "Starting Docker build. This may take several minutes if the "
+            "image '%s' needs to be pulled first.",
+            image,
+        )
 
         docker_client = docker.from_env()
         try:
