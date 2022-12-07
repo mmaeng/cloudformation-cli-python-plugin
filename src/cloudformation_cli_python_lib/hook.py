@@ -185,8 +185,8 @@ class Hook:
                 event.requestData.providerCredentials
             )
 
-            caller_sess = _get_boto_session(caller_credentials)
-            provider_sess = _get_boto_session(provider_credentials)
+            caller_sess = _get_boto_session(caller_credentials, event.region)
+            provider_sess = _get_boto_session(provider_credentials, event.region)
             # credentials are used when rescheduling, so can't zero them out (for now)
             invocation_point = HookInvocationPoint[event.actionInvocationPoint]
             callback_context = event.requestContext.callbackContext or {}

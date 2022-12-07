@@ -257,9 +257,13 @@ def test__parse_request_valid_request_and__cast_resource_request():
 
     mock_session.assert_has_calls(
         [
-            call(Credentials(**ENTRYPOINT_PAYLOAD["requestData"]["callerCredentials"])),
             call(
-                Credentials(**ENTRYPOINT_PAYLOAD["requestData"]["providerCredentials"])
+                Credentials(**ENTRYPOINT_PAYLOAD["requestData"]["callerCredentials"]),
+                ENTRYPOINT_PAYLOAD["region"],
+            ),
+            call(
+                Credentials(**ENTRYPOINT_PAYLOAD["requestData"]["providerCredentials"]),
+                ENTRYPOINT_PAYLOAD["region"],
             ),
         ],
         any_order=True,

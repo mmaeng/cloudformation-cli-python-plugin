@@ -148,8 +148,12 @@ class Resource:
     ]:
         try:
             event = HandlerRequest.deserialize(event_data)
-            caller_sess = _get_boto_session(event.requestData.callerCredentials)
-            provider_sess = _get_boto_session(event.requestData.providerCredentials)
+            caller_sess = _get_boto_session(
+                event.requestData.callerCredentials, event.region
+            )
+            provider_sess = _get_boto_session(
+                event.requestData.providerCredentials, event.region
+            )
             # credentials are used when rescheduling, so can't zero them out (for now)
             action = Action[event.action]
             callback_context = event.callbackContext or {}

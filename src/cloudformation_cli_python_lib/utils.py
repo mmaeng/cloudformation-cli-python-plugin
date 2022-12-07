@@ -234,6 +234,7 @@ class HookInvocationRequest:
     changeSetId: Optional[str] = None
     hookModel: Optional[Mapping[str, Any]] = None
     requestContext: Optional[HookRequestContext] = None
+    region: Optional[str] = None
 
     def __init__(self, **kwargs: Any) -> None:
         dataclass_fields = {f.name for f in fields(self)}

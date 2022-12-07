@@ -258,14 +258,16 @@ def test__parse_request_valid_request_and__cast_hook_request():
             call(
                 Credentials(
                     **json.loads(ENTRYPOINT_PAYLOAD["requestData"]["callerCredentials"])
-                )
+                ),
+                ENTRYPOINT_PAYLOAD["region"],
             ),
             call(
                 Credentials(
                     **json.loads(
                         ENTRYPOINT_PAYLOAD["requestData"]["providerCredentials"]
                     )
-                )
+                ),
+                ENTRYPOINT_PAYLOAD["region"],
             ),
         ],
         any_order=True,
